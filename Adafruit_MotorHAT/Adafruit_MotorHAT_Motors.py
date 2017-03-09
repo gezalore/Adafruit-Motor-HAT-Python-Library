@@ -10,7 +10,6 @@ class Adafruit_StepperMotor:
         self.revsteps = steps
         self.motornum = num
         self.sec_per_step = 0.1
-        self.steppingcounter = 0
         self.currentstep = 0
 
         num -= 1
@@ -34,7 +33,6 @@ class Adafruit_StepperMotor:
 
     def setSpeed(self, rpm):
         self.sec_per_step = 60.0 / (self.revsteps * rpm)
-        self.steppingcounter = 0
 
     def oneStep(self, dir, style):
 
@@ -44,40 +42,40 @@ class Adafruit_StepperMotor:
 
         # first determine what sort of stepping procedure we're up to
         if (style == Adafruit_MotorHAT.SINGLE):
-            if ((self.currentstep//4) % 2):
+            if (self.currentstep % 2):
                 # we're at an odd step, weird
                 if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += 4
+                    self.currentstep += 1
                 else:
-                    self.currentstep -= 4
+                    self.currentstep -= 1
             else:
                 # go to next even step
                 if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += 8
+                    self.currentstep += 2
                 else:
-                    self.currentstep -= 8
+                    self.currentstep -= 2
         if (style == Adafruit_MotorHAT.DOUBLE):
-            if not (self.currentstep//4 % 2):
+            if not (self.currentstep % 2):
                 # we're at an even step, weird
                 if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += 4
+                    self.currentstep += 1
                 else:
-                    self.currentstep -= 4
+                    self.currentstep -= 1
             else:
                 # go to next odd step
                 if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += 8
+                    self.currentstep += 2
                 else:
-                    self.currentstep -= 8
+                    self.currentstep -= 2
         if (style == Adafruit_MotorHAT.INTERLEAVE):
             if (dir == Adafruit_MotorHAT.FORWARD):
-                self.currentstep += 4
+                self.currentstep += 1
             else:
-                self.currentstep -= 4
+                self.currentstep -= 1
 
         # go to next 'step' and wrap around
-        self.currentstep += 32
-        self.currentstep %= 32
+        self.currentstep += 8
+        self.currentstep %= 8
 
 
         # set up coil energizing!
@@ -91,7 +89,7 @@ class Adafruit_StepperMotor:
             [0, 0, 1, 1],
             [0, 0, 0, 1],
             [1, 0, 0, 1] ]
-        coils = step2coils[self.currentstep//4]
+        coils = step2coils[self.currentstep]
 
         #print "coils state = " + str(coils)
         self.MC.setPin(self.AIN2, coils[0])
