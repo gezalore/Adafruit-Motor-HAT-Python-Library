@@ -4,12 +4,6 @@ from Adafruit_MotorHAT.Adafruit_PWM_Servo_Driver import PWM
 
 
 class Adafruit_StepperMotor:
-    MICROSTEPS = 8
-    MICROSTEP_CURVE = [0, 50, 98, 142, 180, 212, 236, 250, 255]
-
-    #MICROSTEPS = 16
-    # a sinusoidal curve NOT LINEAR!
-    #MICROSTEP_CURVE = [0, 25, 50, 74, 98, 120, 141, 162, 180, 197, 212, 225, 236, 244, 250, 253, 255]
 
     def __init__(self, controller, num, steps=200):
         self.MC = controller
@@ -47,92 +41,57 @@ class Adafruit_StepperMotor:
 
         # first determine what sort of stepping procedure we're up to
         if (style == Adafruit_MotorHAT.SINGLE):
-            if ((self.currentstep//(self.MICROSTEPS//2)) % 2):
+            if ((self.currentstep//4) % 2):
                 # we're at an odd step, weird
                 if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += self.MICROSTEPS//2
+                    self.currentstep += 4
                 else:
-                    self.currentstep -= self.MICROSTEPS//2
+                    self.currentstep -= 4
             else:
                 # go to next even step
                 if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += self.MICROSTEPS
+                    self.currentstep += 8
                 else:
-                    self.currentstep -= self.MICROSTEPS
+                    self.currentstep -= 8
         if (style == Adafruit_MotorHAT.DOUBLE):
-            if not (self.currentstep//(self.MICROSTEPS//2) % 2):
+            if not (self.currentstep//4 % 2):
                 # we're at an even step, weird
                 if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += self.MICROSTEPS//2
+                    self.currentstep += 4
                 else:
-                    self.currentstep -= self.MICROSTEPS//2
+                    self.currentstep -= 4
             else:
                 # go to next odd step
                 if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += self.MICROSTEPS
+                    self.currentstep += 8
                 else:
-                    self.currentstep -= self.MICROSTEPS
+                    self.currentstep -= 8
         if (style == Adafruit_MotorHAT.INTERLEAVE):
             if (dir == Adafruit_MotorHAT.FORWARD):
-                self.currentstep += self.MICROSTEPS//2
+                self.currentstep += 4
             else:
-                self.currentstep -= self.MICROSTEPS//2
-
-        if (style == Adafruit_MotorHAT.MICROSTEP):
-            if (dir == Adafruit_MotorHAT.FORWARD):
-                self.currentstep += 1
-            else:
-                self.currentstep -= 1
-
-                # go to next 'step' and wrap around
-                self.currentstep += self.MICROSTEPS * 4
-                self.currentstep %= self.MICROSTEPS * 4
-
-            pwm_a = pwm_b = 0
-            if (self.currentstep >= 0) and (self.currentstep < self.MICROSTEPS):
-                pwm_a = self.MICROSTEP_CURVE[self.MICROSTEPS - self.currentstep]
-                pwm_b = self.MICROSTEP_CURVE[self.currentstep]
-            elif (self.currentstep >= self.MICROSTEPS) and (self.currentstep < self.MICROSTEPS*2):
-                pwm_a = self.MICROSTEP_CURVE[self.currentstep - self.MICROSTEPS]
-                pwm_b = self.MICROSTEP_CURVE[self.MICROSTEPS*2 - self.currentstep]
-            elif (self.currentstep >= self.MICROSTEPS*2) and (self.currentstep < self.MICROSTEPS*3):
-                pwm_a = self.MICROSTEP_CURVE[self.MICROSTEPS*3 - self.currentstep]
-                pwm_b = self.MICROSTEP_CURVE[self.currentstep - self.MICROSTEPS*2]
-            elif (self.currentstep >= self.MICROSTEPS*3) and (self.currentstep < self.MICROSTEPS*4):
-                pwm_a = self.MICROSTEP_CURVE[self.currentstep - self.MICROSTEPS*3]
-                pwm_b = self.MICROSTEP_CURVE[self.MICROSTEPS*4 - self.currentstep]
-
+                self.currentstep -= 4
 
         # go to next 'step' and wrap around
-        self.currentstep += self.MICROSTEPS * 4
-        self.currentstep %= self.MICROSTEPS * 4
+        self.currentstep += 32
+        self.currentstep %= 32
 
         # only really used for microstepping, otherwise always on!
-        self.MC._pwm.setPWM(self.PWMA, 0, pwm_a*16)
-        self.MC._pwm.setPWM(self.PWMB, 0, pwm_b*16)
+        self.MC._pwm.setPWM(self.PWMA, 0, 255*16)
+        self.MC._pwm.setPWM(self.PWMB, 0, 255*16)
 
         # set up coil energizing!
         coils = [0, 0, 0, 0]
 
-        if (style == Adafruit_MotorHAT.MICROSTEP):
-            if (self.currentstep >= 0) and (self.currentstep < self.MICROSTEPS):
-                coils = [1, 1, 0, 0]
-            elif (self.currentstep >= self.MICROSTEPS) and (self.currentstep < self.MICROSTEPS*2):
-                coils = [0, 1, 1, 0]
-            elif (self.currentstep >= self.MICROSTEPS*2) and (self.currentstep < self.MICROSTEPS*3):
-                coils = [0, 0, 1, 1]
-            elif (self.currentstep >= self.MICROSTEPS*3) and (self.currentstep < self.MICROSTEPS*4):
-                coils = [1, 0, 0, 1]
-        else:
-            step2coils = [     [1, 0, 0, 0],
-                [1, 1, 0, 0],
-                [0, 1, 0, 0],
-                [0, 1, 1, 0],
-                [0, 0, 1, 0],
-                [0, 0, 1, 1],
-                [0, 0, 0, 1],
-                [1, 0, 0, 1] ]
-            coils = step2coils[self.currentstep//(self.MICROSTEPS//2)]
+        step2coils = [     [1, 0, 0, 0],
+            [1, 1, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 1, 0],
+            [0, 0, 1, 0],
+            [0, 0, 1, 1],
+            [0, 0, 0, 1],
+            [1, 0, 0, 1] ]
+        coils = step2coils[self.currentstep//4]
 
         #print "coils state = " + str(coils)
         self.MC.setPin(self.AIN2, coils[0])
@@ -148,22 +107,12 @@ class Adafruit_StepperMotor:
 
         if (stepstyle == Adafruit_MotorHAT.INTERLEAVE):
             s_per_s = s_per_s / 2.0
-        if (stepstyle == Adafruit_MotorHAT.MICROSTEP):
-            s_per_s /= self.MICROSTEPS
-            steps *= self.MICROSTEPS
 
         print("{} sec per step".format(s_per_s))
 
         for s in range(steps):
             lateststep = self.oneStep(direction, stepstyle)
             time.sleep(s_per_s)
-
-        if (stepstyle == Adafruit_MotorHAT.MICROSTEP):
-            # this is an edge case, if we are in between full steps, lets just keep going
-            # so we end on a full step
-            while (lateststep != 0) and (lateststep != self.MICROSTEPS):
-                lateststep = self.oneStep(direction, stepstyle)
-                time.sleep(s_per_s)
 
 class Adafruit_DCMotor:
     def __init__(self, controller, num):
@@ -222,7 +171,6 @@ class Adafruit_MotorHAT:
     SINGLE = 1
     DOUBLE = 2
     INTERLEAVE = 3
-    MICROSTEP = 4
 
     def __init__(self, addr = 0x60, freq = 1600, i2c=None, i2c_bus=None):
         self._frequency = freq
