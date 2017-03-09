@@ -34,62 +34,24 @@ class Adafruit_StepperMotor:
     def setSpeed(self, rpm):
         self.sec_per_step = 60.0 / (self.revsteps * rpm)
 
-    def oneStep(self, dir, style):
+    def oneStep(self, dir):
 
         # Turn channels full on!
         self.MC._pwm.setPWM(self.PWMA, 4096, 0)
         self.MC._pwm.setPWM(self.PWMB, 4096, 0)
 
-        # first determine what sort of stepping procedure we're up to
-        if (style == Adafruit_MotorHAT.SINGLE):
-            if (self.currentstep % 2):
-                # we're at an odd step, weird
-                if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += 1
-                else:
-                    self.currentstep -= 1
-            else:
-                # go to next even step
-                if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += 2
-                else:
-                    self.currentstep -= 2
-        if (style == Adafruit_MotorHAT.DOUBLE):
-            if not (self.currentstep % 2):
-                # we're at an even step, weird
-                if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += 1
-                else:
-                    self.currentstep -= 1
-            else:
-                # go to next odd step
-                if (dir == Adafruit_MotorHAT.FORWARD):
-                    self.currentstep += 2
-                else:
-                    self.currentstep -= 2
-        if (style == Adafruit_MotorHAT.INTERLEAVE):
-            if (dir == Adafruit_MotorHAT.FORWARD):
-                self.currentstep += 1
-            else:
-                self.currentstep -= 1
-
-        # go to next 'step' and wrap around
-        self.currentstep += 8
-        self.currentstep %= 8
-
+        if (dir == Adafruit_MotorHAT.FORWARD):
+            self.currentstep += 1
+        else:
+            self.currentstep -= 1
 
         # set up coil energizing!
-        coils = [0, 0, 0, 0]
-
-        step2coils = [     [1, 0, 0, 0],
+        step2coils = [
             [1, 1, 0, 0],
-            [0, 1, 0, 0],
             [0, 1, 1, 0],
-            [0, 0, 1, 0],
             [0, 0, 1, 1],
-            [0, 0, 0, 1],
             [1, 0, 0, 1] ]
-        coils = step2coils[self.currentstep]
+        coils = step2coils[self.currentstep % 4]
 
         #print "coils state = " + str(coils)
         self.MC.setPin(self.AIN2, coils[0])
@@ -97,28 +59,19 @@ class Adafruit_StepperMotor:
         self.MC.setPin(self.AIN1, coils[2])
         self.MC.setPin(self.BIN2, coils[3])
 
-        return self.currentstep
-
-    def step(self, steps, direction, stepstyle):
+    def step(self, steps, direction):
         s_per_s = self.sec_per_step
         lateststep = 0
 
-        if (stepstyle == Adafruit_MotorHAT.INTERLEAVE):
-            s_per_s = s_per_s / 2.0
-
-        print("{} sec per step".format(s_per_s))
+        print("{} sec for {} steps".format(s_per_s*steps, steps))
 
         for s in range(steps):
-            lateststep = self.oneStep(direction, stepstyle)
+            lateststep = self.oneStep(direction)
             time.sleep(s_per_s)
 
 class Adafruit_MotorHAT:
     FORWARD = 1
     BACKWARD = 2
-
-    SINGLE = 1
-    DOUBLE = 2
-    INTERLEAVE = 3
 
     def __init__(self, addr = 0x60, freq = 1600, i2c=None, i2c_bus=None):
         self._frequency = freq
