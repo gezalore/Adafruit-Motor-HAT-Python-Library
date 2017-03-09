@@ -1,1 +1,1 @@
-from Adafruit_MotorHAT.Adafruit_MotorHAT_Motors import Adafruit_StepperMotor, Adafruit_MotorHAT
+from Adafruit_MotorHAT.Adafruit_MotorHAT_Motors import StepperMotor, MotorHAT
