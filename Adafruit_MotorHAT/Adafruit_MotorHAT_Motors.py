@@ -77,8 +77,8 @@ class Adafruit_StepperMotor:
         self.currentstep %= 32
 
         # only really used for microstepping, otherwise always on!
-        self.MC._pwm.setPWM(self.PWMA, 0, 255*16)
-        self.MC._pwm.setPWM(self.PWMB, 0, 255*16)
+        self.MC._pwm.setPWM(self.PWMA, 0, 4095)
+        self.MC._pwm.setPWM(self.PWMB, 0, 4095)
 
         # set up coil energizing!
         coils = [0, 0, 0, 0]
