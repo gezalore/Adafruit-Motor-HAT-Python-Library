@@ -37,7 +37,10 @@ class Adafruit_StepperMotor:
         self.steppingcounter = 0
 
     def oneStep(self, dir, style):
-        pwm_a = pwm_b = 255
+
+        # Turn channels full on!
+        self.MC._pwm.setPWM(self.PWMA, 4096, 0)
+        self.MC._pwm.setPWM(self.PWMB, 4096, 0)
 
         # first determine what sort of stepping procedure we're up to
         if (style == Adafruit_MotorHAT.SINGLE):
@@ -76,9 +79,6 @@ class Adafruit_StepperMotor:
         self.currentstep += 32
         self.currentstep %= 32
 
-        # only really used for microstepping, otherwise always on!
-        self.MC._pwm.setPWM(self.PWMA, 0, 4095)
-        self.MC._pwm.setPWM(self.PWMB, 0, 4095)
 
         # set up coil energizing!
         coils = [0, 0, 0, 0]
