@@ -9,7 +9,7 @@ class Adafruit_StepperMotor:
         self.MC = controller
         self.revsteps = steps
         self.motornum = num
-        self.sec_per_step = 0.1
+        self.dt= 0.1
         self.currentstep = 0
 
         num -= 1
@@ -32,7 +32,7 @@ class Adafruit_StepperMotor:
             raise NameError('MotorHAT Stepper must be between 1 and 2 inclusive')
 
     def setSpeed(self, rpm):
-        self.sec_per_step = 60.0 / (self.revsteps * rpm)
+        self.dt = 60.0 / (self.revsteps * rpm)
 
     def oneStep(self, dir):
 
@@ -60,14 +60,13 @@ class Adafruit_StepperMotor:
         self.MC.setPin(self.BIN2, coils[3])
 
     def step(self, steps, direction):
-        s_per_s = self.sec_per_step
-        lateststep = 0
 
-        print("{} sec for {} steps".format(s_per_s*steps, steps))
-
-        for s in range(steps):
-            lateststep = self.oneStep(direction)
-            time.sleep(s_per_s)
+        t = time.time()
+        for _ in range(steps):
+            self.oneStep(direction)
+            t += self.dt
+            while time.time() < t:
+                pass
 
 class Adafruit_MotorHAT:
     FORWARD = 1
